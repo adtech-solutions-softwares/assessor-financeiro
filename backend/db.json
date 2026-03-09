@@ -1,0 +1,118 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "$2a$10$aqZMUCU/rZFLhRW4CUgOPu.tQp1rQ/k5GzOwsqnLg.1xrdmpT0ve.",
+      "name": "Administrador",
+      "role": "admin",
+      "createdAt": "2026-03-07T16:09:48.846Z"
+    }
+  ],
+  "transactions": [],
+  "goals": [],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Alimentação",
+      "type": "expense",
+      "color": "#ef4444"
+    },
+    {
+      "id": 2,
+      "name": "Moradia",
+      "type": "expense",
+      "color": "#f59e0b"
+    },
+    {
+      "id": 3,
+      "name": "Transporte",
+      "type": "expense",
+      "color": "#3b82f6"
+    },
+    {
+      "id": 4,
+      "name": "Saúde",
+      "type": "expense",
+      "color": "#10b981"
+    },
+    {
+      "id": 5,
+      "name": "Educação",
+      "type": "expense",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": 6,
+      "name": "Lazer",
+      "type": "expense",
+      "color": "#ec4899"
+    },
+    {
+      "id": 7,
+      "name": "Vestuário",
+      "type": "expense",
+      "color": "#14b8a6"
+    },
+    {
+      "id": 8,
+      "name": "Serviços",
+      "type": "expense",
+      "color": "#f97316"
+    },
+    {
+      "id": 9,
+      "name": "Cartão Crédito",
+      "type": "expense",
+      "color": "#6366f1"
+    },
+    {
+      "id": 10,
+      "name": "Emergência",
+      "type": "expense",
+      "color": "#dc2626"
+    },
+    {
+      "id": 11,
+      "name": "Pessoal",
+      "type": "expense",
+      "color": "#84cc16"
+    },
+    {
+      "id": 12,
+      "name": "Impostos",
+      "type": "expense",
+      "color": "#64748b"
+    },
+    {
+      "id": 13,
+      "name": "Telefone",
+      "type": "expense",
+      "color": "#0ea5e9"
+    },
+    {
+      "id": 14,
+      "name": "Trabalho",
+      "type": "expense",
+      "color": "#a855f7"
+    },
+    {
+      "id": 15,
+      "name": "Renda",
+      "type": "income",
+      "color": "#10b981"
+    },
+    {
+      "id": 16,
+      "name": "Outros",
+      "type": "expense",
+      "color": "#94a3b8"
+    },
+    {
+      "id": 1772899916621,
+      "name": "CARTÃO DE CRÉDITO",
+      "type": "expense",
+      "color": "#6366f1"
+    }
+  ]
+}

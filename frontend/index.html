@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessor Financeiro Pro</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <style>
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #334155;
+        }
+        
+        .user-info span {
+            color: #f8fafc;
+            font-size: 0.9rem;
+        }
+        
+        .user-info i {
+            color: #6366f1;
+            margin-right: 8px;
+        }
+        
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            margin-left: 10px;
+        }
+        
+        .category-manager {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .category-list-manager {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: white;
+            position: relative;
+        }
+        
+        .category-tag button {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .category-tag button:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .add-category-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .add-category-form input,
+        .add-category-form select {
+            flex: 1;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #f8fafc;
+        }
+        
+        .color-picker {
+            width: 50px !important;
+            height: 40px;
+            padding: 5px !important;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header style="position: relative;">
+        <h1><i class="fas fa-chart-line"></i> Assessor Financeiro Pro</h1>
+        <p class="subtitle">Controle total das suas finanças</p>
+    </header>
+
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">
+                <i class="fas fa-home"></i> Dashboard
+            </div>
+            <div class="tab" onclick="switchTab('import')">
+                <i class="fas fa-file-import"></i> Importar
+            </div>
+            <div class="tab" onclick="switchTab('transactions')">
+                <i class="fas fa-list"></i> Transações
+            </div>
+            <div class="tab" onclick="switchTab('categories')">
+                <i class="fas fa-tags"></i> Categorias
+            </div>
+            <div class="tab" onclick="switchTab('analytics')">
+                <i class="fas fa-chart-pie"></i> Análises
+            </div>
+            <div class="tab" onclick="switchTab('goals')">
+                <i class="fas fa-bullseye"></i> Metas
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Saldo Atual</div>
+                            <div class="amount positive" id="totalBalance">R$ 0,00</div>
+                        </div>
+                        <div class="icon-box icon-success"><i class="fas fa-wallet"></i></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Receitas do Mês</div>
+                            <div class="amount positive" id="totalIncome">R$ 0,00</div>
+                        </div>
+                        <div class="icon-box icon-primary"><i class="fas fa-arrow-down"></i></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Despesas do Mês</div>
+                            <div class="amount negative" id="totalExpense">R$ 0,00</div>
+                        </div>
+                        <div class="icon-box icon-danger"><i class="fas fa-arrow-up"></i></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Economia</div>
+                            <div class="amount neutral" id="savingsRate">0%</div>
+                        </div>
+                        <div class="icon-box icon-warning"><i class="fas fa-piggy-bank"></i></div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="savingsProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-calculator"></i> Quanto Você Pode Gastar</div>
+                </div>
+                <div class="daily-limit">
+                    <div class="limit-grid">
+                        <div class="limit-item">
+                            <div class="limit-value" id="dailyLimit">R$ 0,00</div>
+                            <div class="limit-label">Por Dia</div>
+                        </div>
+                        <div class="limit-item">
+                            <div class="limit-value" id="weeklyLimit">R$ 0,00</div>
+                            <div class="limit-label">Por Semana</div>
+                        </div>
+                        <div class="limit-item">
+                            <div class="limit-value" id="monthlyLimit">R$ 0,00</div>
+                            <div class="limit-label">Restante do Mês</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <span id="financialTip">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="grid" style="margin-top: 30px;">
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">
+                        <i class="fas fa-chart-pie"></i> Distribuição de Gastos
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">
+                        <i class="fas fa-chart-bar"></i> Top Categorias
+                    </div>
+                    <ul class="category-list" id="topCategories">
+                        <li class="empty-state"><i class="fas fa-inbox"></i><p>Sem dados</p></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Importar -->
+        <div id="import" class="tab-content">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
+                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div class="upload-text">Arraste sua planilha aqui ou clique para selecionar</div>
+                <div class="upload-hint">Suporta Excel (.xlsx, .xls) e CSV</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Formato Esperado</div>
+                    <div>
+                        <button class="btn btn-primary btn-sm" onclick="downloadTemplate()">
+                            <i class="fas fa-download"></i> Modelo
+                        </button>
+                        <button class="btn btn-success btn-sm export-btn" onclick="exportData('csv')">
+                            <i class="fas fa-file-export"></i> Exportar CSV
+                        </button>
+                        <button class="btn btn-success btn-sm export-btn" onclick="exportData('excel')">
+                            <i class="fas fa-file-excel"></i> Exportar Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="excel-table-container">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>01/03/2024</td>
+                                <td>Salário</td>
+                                <td>Renda</td>
+                                <td class="cell-income">Receita</td>
+                                <td class="cell-income">R$ 5.000,00</td>
+                            </tr>
+                            <tr>
+                                <td>05/03/2024</td>
+                                <td>Aluguel</td>
+                                <td>Moradia</td>
+                                <td class="cell-fixed">Fixa</td>
+                                <td class="cell-expense">R$ 1.200,00</td>
+                            </tr>
+                            <tr>
+                                <td>10/03/2024</td>
+                                <td>Supermercado</td>
+                                <td>Alimentação</td>
+                                <td class="cell-variable">Variável</td>
+                                <td class="cell-expense">R$ 450,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transações -->
+        <div id="transactions" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-filter"></i> Transações</div>
+                    <div>
+                        <button class="btn btn-success btn-sm" onclick="exportData('csv')">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="openModal()" style="margin-left: 10px;">
+                            <i class="fas fa-plus"></i> Nova
+                        </button>
+                    </div>
+                </div>
+
+                <div class="excel-filters">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>Período De</label>
+                            <input type="date" class="filter-input" id="filterDateFrom" onchange="applyFilters()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Período Até</label>
+                            <input type="date" class="filter-input" id="filterDateTo" onchange="applyFilters()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Mês</label>
+                            <select class="filter-select" id="filterMonth" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Ano</label>
+                            <select class="filter-select" id="filterYear" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Categoria</label>
+                            <select class="filter-select" id="filterCategory" onchange="applyFilters()">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Tipo</label>
+                            <select class="filter-select" id="filterType" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="income">Receita</option>
+                                <option value="fixed">Despesa Fixa</option>
+                                <option value="variable">Despesa Variável</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" class="filter-input" id="filterSearch" placeholder="Descrição..." onkeyup="applyFilters()">
+                        </div>
+                        <button class="clear-filters" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Limpar
+                        </button>
+                    </div>
+                    <div class="filter-tags" id="activeFilters"></div>
+                </div>
+
+                <div class="excel-table-container">
+                    <table class="excel-table" id="transactionsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('date')">Data <i class="fas fa-sort sort-icon"></i></th>
+                                <th onclick="sortTable('description')">Descrição <i class="fas fa-sort sort-icon"></i></th>
+                                <th onclick="sortTable('category')">Categoria <i class="fas fa-sort sort-icon"></i></th>
+                                <th onclick="sortTable('type')">Tipo <i class="fas fa-sort sort-icon"></i></th>
+                                <th onclick="sortTable('amount')">Valor <i class="fas fa-sort sort-icon"></i></th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Nenhuma transação encontrada</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorias -->
+        <div id="categories" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-tags"></i> Gerenciar Categorias</div>
+                </div>
+                
+                <div class="category-manager">
+                    <h3 style="margin-bottom: 15px; color: var(--primary);">Categorias Existentes</h3>
+                    <div class="category-list-manager" id="categoryListManager">
+                        <!-- Categorias serão carregadas aqui -->
+                    </div>
+                </div>
+
+                <div class="category-manager" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: var(--success);">Adicionar Nova Categoria</h3>
+                    <form class="add-category-form" onsubmit="addCategory(event)">
+                        <input type="text" id="newCategoryName" placeholder="Nome da categoria" required>
+                        <select id="newCategoryType" required>
+                            <option value="expense">Despesa</option>
+                            <option value="income">Receita</option>
+                        </select>
+                        <input type="color" id="newCategoryColor" class="color-picker" value="#6366f1" title="Cor">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics -->
+        <div id="analytics" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">
+                        <i class="fas fa-chart-line"></i> Evolução Mensal
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">
+                        <i class="fas fa-balance-scale"></i> Fixos vs Variáveis
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metas -->
+        <div id="goals" class="tab-content">
+            <div class="card" style="margin-bottom: 30px;">
+                <div class="card-header">
+                    <div class="card-title">Cadastrar Nova Meta</div>
+                </div>
+                <form id="goalForm" onsubmit="addGoal(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome da Meta</label>
+                            <input type="text" id="goalName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Necessário (R$)</label>
+                            <input type="text" id="goalAmount" class="currency-input" placeholder="0,00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Prazo</label>
+                            <select id="goalTerm" required>
+                                <option value="short">Curto Prazo (até 1 ano)</option>
+                                <option value="medium">Médio Prazo (1-5 anos)</option>
+                                <option value="long">Longo Prazo (5+ anos)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Mensal (R$)</label>
+                            <input type="text" id="goalMonthly" class="currency-input" placeholder="0,00" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Criar Meta
+                    </button>
+                </form>
+            </div>
+
+            <div class="goals-grid" id="goalsContainer">
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <i class="fas fa-bullseye"></i>
+                    <p>Nenhuma meta cadastrada</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nova Transação</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="addTransaction(event)">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="transDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="transDesc" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="transCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="transType" required>
+                        <option value="income">Receita</option>
+                        <option value="fixed">Despesa Fixa</option>
+                        <option value="variable">Despesa Variável</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="text" id="transAmount" class="currency-input" placeholder="0,00" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText"></span>
+    </div>
+
+    <div class="connection-status offline" id="connectionStatus">
+        <i class="fas fa-circle"></i> <span>Offline</span>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
