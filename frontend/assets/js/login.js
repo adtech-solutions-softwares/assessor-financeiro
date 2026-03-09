@@ -34,6 +34,7 @@ async function handleLogin(e) {
     const errorDiv = document.getElementById('errorMessage');
     
     try {
+        console.log('Enviando login para:', `${API_URL}/auth/login`);
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
