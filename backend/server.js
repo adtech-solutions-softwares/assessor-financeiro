@@ -3,21 +3,34 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const { authenticateToken, generateToken } = require('./middleware/auth');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'db.json');
+const SECRET_KEY = 'assessor-financeiro-secret-key-2024';
 
-// Middlewares
-app.use(cors({
-    origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Inicializar db.json com usuário admin
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token não fornecido' });
+    }
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Token inválido ou expirado' });
+        }
+        req.user = user;
+        next();
+    });
+}
+
 function initDB() {
     if (!fs.existsSync(DB_FILE)) {
         const initialData = {
@@ -53,9 +66,8 @@ function initDB() {
             ]
         };
         fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
-        console.log('✅ Banco de dados criado com usuário admin');
-        console.log('👤 Usuário: admin');
-        console.log('🔑 Senha: admin123');
+        console.log('✅ Banco de dados criado');
+        console.log('👤 Usuário: admin | 🔑 Senha: admin123');
     }
 }
 
@@ -67,9 +79,15 @@ function writeDB(data) {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// ===== ROTAS DE AUTENTICAÇÃO =====
+function generateToken(user) {
+    return jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        SECRET_KEY,
+        { expiresIn: '24h' }
+    );
+}
 
-// Login
+// Rotas de Autenticação
 app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body;
     const db = readDB();
@@ -96,45 +114,11 @@ app.post('/api/auth/login', (req, res) => {
     });
 });
 
-// Verificar token
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-// Criar usuário (apenas admin)
-app.post('/api/auth/register', authenticateToken, (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Apenas administradores podem criar usuários' });
-    }
-
-    const { username, password, name, role = 'user' } = req.body;
-    const db = readDB();
-
-    if (db.users.find(u => u.username === username)) {
-        return res.status(400).json({ error: 'Usuário já existe' });
-    }
-
-    const newUser = {
-        id: Date.now().toString(),
-        username,
-        password: bcrypt.hashSync(password, 10),
-        name,
-        role,
-        createdAt: new Date().toISOString()
-    };
-
-    db.users.push(newUser);
-    writeDB(db);
-
-    res.status(201).json({
-        message: 'Usuário criado com sucesso',
-        user: { id: newUser.id, username: newUser.username, name: newUser.name, role: newUser.role }
-    });
-});
-
-// ===== ROTAS PROTEGIDAS =====
-
-// Categorias
+// Rotas Protegidas - Categorias
 app.get('/api/categories', authenticateToken, (req, res) => {
     const db = readDB();
     res.json(db.categories);
@@ -164,8 +148,10 @@ app.delete('/api/categories/:id', authenticateToken, (req, res) => {
     const db = readDB();
     const categoryId = parseInt(req.params.id);
     
-    // Verificar se há transações usando esta categoria
-    const hasTransactions = db.transactions.some(t => t.category === db.categories.find(c => c.id === categoryId)?.name);
+    const hasTransactions = db.transactions.some(t => 
+        t.category === db.categories.find(c => c.id === categoryId)?.name
+    );
+    
     if (hasTransactions) {
         return res.status(400).json({ error: 'Não pode excluir categoria em uso' });
     }
@@ -175,7 +161,7 @@ app.delete('/api/categories/:id', authenticateToken, (req, res) => {
     res.status(204).send();
 });
 
-// Transações
+// Rotas Protegidas - Transações
 app.get('/api/transactions', authenticateToken, (req, res) => {
     const db = readDB();
     res.json(db.transactions);
@@ -199,7 +185,11 @@ app.put('/api/transactions/:id', authenticateToken, (req, res) => {
     const index = db.transactions.findIndex(t => t.id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'Not found' });
     
-    db.transactions[index] = { ...db.transactions[index], ...req.body, updatedAt: new Date().toISOString() };
+    db.transactions[index] = { 
+        ...db.transactions[index], 
+        ...req.body, 
+        updatedAt: new Date().toISOString() 
+    };
     writeDB(db);
     res.json(db.transactions[index]);
 });
@@ -211,7 +201,7 @@ app.delete('/api/transactions/:id', authenticateToken, (req, res) => {
     res.status(204).send();
 });
 
-// Metas
+// Rotas Protegidas - Metas
 app.get('/api/goals', authenticateToken, (req, res) => {
     const db = readDB();
     res.json(db.goals);
@@ -235,7 +225,11 @@ app.put('/api/goals/:id', authenticateToken, (req, res) => {
     const index = db.goals.findIndex(g => g.id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'Not found' });
     
-    db.goals[index] = { ...db.goals[index], ...req.body, updatedAt: new Date().toISOString() };
+    db.goals[index] = { 
+        ...db.goals[index], 
+        ...req.body, 
+        updatedAt: new Date().toISOString() 
+    };
     writeDB(db);
     res.json(db.goals[index]);
 });
@@ -247,7 +241,7 @@ app.delete('/api/goals/:id', authenticateToken, (req, res) => {
     res.status(204).send();
 });
 
-// Exportar dados para Excel/CSV
+// Exportar dados
 app.get('/api/export', authenticateToken, (req, res) => {
     const db = readDB();
     const format = req.query.format || 'json';
@@ -260,9 +254,9 @@ app.get('/api/export', authenticateToken, (req, res) => {
             csv += `"${date}","${t.description}","${t.category}","${type}","${formatCurrency(t.amount)}"\n`;
         });
         
-        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename=transacoes.csv');
-        return res.send(csv);
+        return res.send('\uFEFF' + csv);
     }
     
     res.json({
@@ -285,10 +279,12 @@ function formatCurrency(value) {
     }).format(value || 0);
 }
 
-// Inicializar e iniciar
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/login.html'));
+});
+
 initDB();
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`📁 Banco de dados: ${DB_FILE}`);
     console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
 });

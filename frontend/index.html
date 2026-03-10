@@ -9,128 +9,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
-    
-    <style>
-        .user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(30, 41, 59, 0.8);
-            padding: 10px 20px;
-            border-radius: 30px;
-            border: 1px solid #334155;
-        }
-        
-        .user-info span {
-            color: #f8fafc;
-            font-size: 0.9rem;
-        }
-        
-        .user-info i {
-            color: #6366f1;
-            margin-right: 8px;
-        }
-        
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-        }
-        
-        .btn-logout:hover {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .export-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            margin-left: 10px;
-        }
-        
-        .category-manager {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 12px;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-        }
-        
-        .category-list-manager {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .category-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: white;
-            position: relative;
-        }
-        
-        .category-tag button {
-            background: rgba(255,255,255,0.3);
-            border: none;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .category-tag button:hover {
-            background: rgba(255,255,255,0.5);
-        }
-        
-        .add-category-form {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .add-category-form input,
-        .add-category-form select {
-            flex: 1;
-            padding: 10px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: #f8fafc;
-        }
-        
-        .color-picker {
-            width: 50px !important;
-            height: 40px;
-            padding: 5px !important;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
-    <header style="position: relative;">
+    <header>
         <h1><i class="fas fa-chart-line"></i> Assessor Financeiro Pro</h1>
         <p class="subtitle">Controle total das suas finanças</p>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span><i class="fas fa-user"></i> <span id="userName"></span></span>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
     </header>
 
     <div class="container">
-        <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" onclick="switchTab('dashboard')">
                 <i class="fas fa-home"></i> Dashboard
@@ -152,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Dashboard -->
         <div id="dashboard" class="tab-content active">
             <div class="grid">
                 <div class="card">
@@ -242,7 +133,6 @@
             </div>
         </div>
 
-        <!-- Importar -->
         <div id="import" class="tab-content">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
                  ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
@@ -260,10 +150,10 @@
                             <i class="fas fa-download"></i> Modelo
                         </button>
                         <button class="btn btn-success btn-sm export-btn" onclick="exportData('csv')">
-                            <i class="fas fa-file-export"></i> Exportar CSV
+                            <i class="fas fa-file-csv"></i> CSV
                         </button>
                         <button class="btn btn-success btn-sm export-btn" onclick="exportData('excel')">
-                            <i class="fas fa-file-excel"></i> Exportar Excel
+                            <i class="fas fa-file-excel"></i> Excel
                         </button>
                     </div>
                 </div>
@@ -306,7 +196,6 @@
             </div>
         </div>
 
-        <!-- Transações -->
         <div id="transactions" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -406,7 +295,6 @@
             </div>
         </div>
 
-        <!-- Categorias -->
         <div id="categories" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -416,7 +304,7 @@
                 <div class="category-manager">
                     <h3 style="margin-bottom: 15px; color: var(--primary);">Categorias Existentes</h3>
                     <div class="category-list-manager" id="categoryListManager">
-                        <!-- Categorias serão carregadas aqui -->
+                        <p class="empty-state">Carregando categorias...</p>
                     </div>
                 </div>
 
@@ -437,7 +325,6 @@
             </div>
         </div>
 
-        <!-- Analytics -->
         <div id="analytics" class="tab-content">
             <div class="grid">
                 <div class="card">
@@ -459,7 +346,6 @@
             </div>
         </div>
 
-        <!-- Metas -->
         <div id="goals" class="tab-content">
             <div class="card" style="margin-bottom: 30px;">
                 <div class="card-header">
@@ -503,7 +389,6 @@
         </div>
     </div>
 
-    <!-- Modal -->
     <div id="transactionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -551,7 +436,6 @@
         <i class="fas fa-circle"></i> <span>Offline</span>
     </div>
 
-    <script src="assets/js/auth.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>

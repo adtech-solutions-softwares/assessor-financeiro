@@ -1,10 +1,15 @@
 const API_URL = 'http://localhost:3000/api';
 
-// Verificar se já está logado
 window.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('auth_token');
     if (token) {
         verifyToken(token);
+    }
+    
+    const rememberedUser = localStorage.getItem('remember_user');
+    if (rememberedUser) {
+        document.getElementById('username').value = rememberedUser;
+        document.getElementById('remember').checked = true;
     }
 });
 
@@ -32,9 +37,14 @@ async function handleLogin(e) {
     const password = document.getElementById('password').value;
     const remember = document.getElementById('remember').checked;
     const errorDiv = document.getElementById('errorMessage');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<span class="loading"></span> Entrando...';
+    loginBtn.disabled = true;
+    errorDiv.classList.remove('show');
     
     try {
-        console.log('Enviando login para:', `${API_URL}/auth/login`);
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -47,7 +57,6 @@ async function handleLogin(e) {
             throw new Error(data.error || 'Erro ao fazer login');
         }
         
-        // Salvar token
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
@@ -57,16 +66,13 @@ async function handleLogin(e) {
             localStorage.removeItem('remember_user');
         }
         
-        // Redirecionar
         window.location.href = 'index.html';
         
     } catch (error) {
         errorDiv.textContent = error.message;
         errorDiv.classList.add('show');
-        
-        setTimeout(() => {
-            errorDiv.classList.remove('show');
-        }, 5000);
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
     }
 }
 
@@ -86,12 +92,5 @@ function togglePassword() {
 }
 
 function forgotPassword() {
-    alert('Entre em contato com o administrador do sistema para redefinir sua senha.\n\nUsuário padrão: admin\nSenha padrão: admin123');
-}
-
-// Preencher usuário salvo
-const rememberedUser = localStorage.getItem('remember_user');
-if (rememberedUser) {
-    document.getElementById('username').value = rememberedUser;
-    document.getElementById('remember').checked = true;
+    alert('Entre em contato com o administrador do sistema.\n\nUsuário padrão: admin\nSenha padrão: admin123');
 }
